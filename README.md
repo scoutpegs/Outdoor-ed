@@ -8,15 +8,24 @@ It uses this Apps Script deployment:
 https://script.google.com/macros/s/AKfycbzz9GSNzR_KJvljoZMS6ezE05V5uevue7XLxRh5eImapZt2ze0jTQTOBTEcCo_fN0ux/exec
 ```
 
-If that URL ever changes (e.g. you redeploy the Apps Script), it's set in exactly two places — a config block at the very top of **app.js**, and a matching line near the top of **share-handler.html**'s script:
+**New:** if that URL ever changes, there is now exactly **one** place to update it — the config block at the top of **`config.js`**:
 
 ```js
 const API_URL = "https://script.google.com/macros/s/.../exec";
 ```
 
-## What changed in this pass
+Both `index.html` and `share-handler.html` load `config.js` before anything else, so a redeploy is a one-line edit instead of hunting through multiple files.
+
+👉 **New here? Start with [`SETUP_SUPER_SIMPLE.md`](./SETUP_SUPER_SIMPLE.md)** — a plain-language, step-by-step walkthrough of the whole setup (Sheet connection, Home Screen install, iPhone Shortcut). Everything below is the fuller reference version.
+
+## Bugs fixed in this pass
+- **"Add to Home Screen" popup never went away, even after installing.** `styles.css` had rules like `.install-gate{display:flex}` and `.install-sheet{display:flex}` with no matching `[hidden]{display:none}` rule — in CSS, an author stylesheet's `display` always beats the browser's built-in `hidden`-attribute style, so those panels showed up regardless of what the `hidden` attribute said. Added `[hidden]{display:none!important}` globally, which is the actual fix. Also added a live check (`visibilitychange`/`focus`/`display-mode` listeners) so on Android/desktop the gate now drops the instant install finishes, without needing a manual reload.
+- **"Illegal spreadsheet key or URL."** `Code.gs` shipped with `SPREADSHEET_ID = "PUT_YOUR_GOOGLE_SHEET_ID_HERE"` — a placeholder, not a real ID, so `SpreadsheetApp.openById()` threw exactly that error. Rewrote it so, by default, the script just uses whichever Sheet it's attached to (`SpreadsheetApp.getActiveSpreadsheet()`) — no ID needed at all — and auto-creates the `Pins` tab with the correct headers the first time it runs. `SPREADSHEET_ID` is now optional, for people who specifically want a standalone script. See `SETUP_SUPER_SIMPLE.md` for the from-scratch steps.
+- Bumped the service worker's cache name so installed copies actually pick up these fixes on next open, instead of serving the old cached files forever.
+
+## What changed in this pass (earlier redesign)
 - Renamed everything from "Pinboard" to **Camp Board**, with copy aimed at Outdoor Ed camp planning instead of a generic board.
-- Restyled to look and behave more like Pinterest: masonry grid, a filled "Expand" pill and a link chip that appear on hover, a red/pine/khaki palette instead of plain black-and-white, and Fraunces/Inter type.
+- Restyled to look and behave more like Pinterest: masonry grid, a filled "Expand" pill and a link chip that appear on hover, a red/pine/khaki palette instead of plain black-and-white, and Fraunces/Inter type. This pass adds real motion throughout — the composer, lightbox, install banners and the install gate all slide/fade in instead of snapping into place.
 - Added a profile avatar button (top right) so people can set the name that appears on their pins without opening the composer.
 - Added an **install gate** (see below) that only lets the board be used once it's installed to the Home Screen on a phone.
 - LocalStorage keys were renamed (`campboard-*` instead of `pinboard-*`), so anyone who used the old version will start with a fresh device ID — existing pins in the Sheet are untouched, but "delete your own pins" permission resets per device.
@@ -85,16 +94,18 @@ The frontend expects:
 - POST `{"action":"addPin", ...}` → JSON
 - POST `{"action":"deletePin", "id":"...", "author_id":"..."}` → JSON
 
-`Code.gs` is included as a compatible backend if you ever need to redeploy it. Put your Google Sheet ID into `SPREADSHEET_ID`, create a `Pins` sheet with headers:
+`Code.gs` is the backend. Easiest path: create it from **inside your Google Sheet** (Extensions > Apps Script) and leave `SPREADSHEET_ID` blank — it uses that Sheet automatically and builds the `Pins` tab itself:
 
 `id | created_at | url | title | author | author_id | category`
 
-Then deploy that Apps Script as a Web App (Execute as: Me, Who has access: Anyone with the link).
+Then Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone). You can also run the included `setup()` function once from the Apps Script editor to sanity-check the connection before deploying — see `SETUP_SUPER_SIMPLE.md`.
 
 ## Files
 - `index.html` / `styles.css` / `app.js` — the board itself
+- `config.js` — the one place that holds `API_URL` and `SHORTCUT_URL`
 - `manifest.json` — PWA name, icons, share target
 - `share-handler.html` — receives Android Web Share Target shares
 - `sw.js` — offline app-shell caching
-- `Code.gs` — Apps Script backend (reference/redeploy copy)
+- `Code.gs` — Apps Script backend
 - `icon.svg` — fallback vector icon
+- `SETUP_SUPER_SIMPLE.md` — plain-language setup walkthrough

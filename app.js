@@ -1,16 +1,5 @@
 /* Camp Board — Outdoor Ed shared planning board (Google Apps Script / Google Sheets edition) */
-
-/* ============================================================
-   CONFIG — the only two lines you should ever need to touch
-   ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbzz9GSNzR_KJvljoZMS6ezE05V5uevue7XLxRh5eImapZt2ze0jTQTOBTEcCo_fN0ux/exec";
-
-// Paste your iPhone Shortcut's iCloud share link here once you've made it
-// (Shortcuts app → open the shortcut → ⋯ → Share → Copy iCloud Link).
-// Example: "https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-// Leave it as "" and every Shortcut prompt in the app stays hidden.
-const SHORTCUT_URL = "";
-/* ============================================================ */
+/* API_URL and SHORTCUT_URL now live in config.js — loaded before this file. */
 const state = {pins:[],filter:"all",search:"",installPrompt:null,lightboxPin:null,zoom:1,panX:0,panY:0,userId:localStorage.getItem("campboard-user-id")||crypto.randomUUID()};
 localStorage.setItem("campboard-user-id",state.userId);
 const $=s=>document.querySelector(s);
@@ -93,7 +82,15 @@ function initInstallGate(){
   activate(isIOSUA()?"ios":"android");
   const gateInstallBtn=$("#gateInstallNow");
   window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;gateInstallBtn.hidden=false});
-  gateInstallBtn.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;gateInstallBtn.hidden=true};
+  gateInstallBtn.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();const choice=await state.installPrompt.userChoice;state.installPrompt=null;gateInstallBtn.hidden=true;if(choice?.outcome==="accepted")setTimeout(closeGateIfInstalled,600)};
+  // Android/desktop Chrome flips display-mode to standalone the moment the
+  // install finishes, even without leaving this tab — catch that and drop
+  // the gate immediately instead of leaving people stuck looking at it.
+  const mq=matchMedia?.("(display-mode: standalone)");
+  mq?.addEventListener?.("change",closeGateIfInstalled);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)closeGateIfInstalled()});
+  window.addEventListener("focus",closeGateIfInstalled);
+  function closeGateIfInstalled(){if(!isStandaloneMode())return;gate.hidden=true;document.documentElement.classList.remove("gate-active");document.body.classList.remove("gate-active")}
 }
 
 document.addEventListener("DOMContentLoaded",async()=>{els.author.value=localStorage.getItem("campboard-author")||"";updateAvatar();initInstallGate();install();initShortcutPrompt();await pwa();await load();poll();shareParams()})
