@@ -1,9 +1,20 @@
 /* Camp Board — Outdoor Ed shared planning board (Google Apps Script / Google Sheets edition) */
-const API_URL = "https://script.google.com/macros/s/AKfycbywKJ9E_dCTmjl0PWn-g3DcQKGHhdfPG0AyW_paAlztkfSzLbIVMtIhLuVseFKAYdpc/exec";
+
+/* ============================================================
+   CONFIG — the only two lines you should ever need to touch
+   ============================================================ */
+const API_URL = "https://script.google.com/macros/s/AKfycbzz9GSNzR_KJvljoZMS6ezE05V5uevue7XLxRh5eImapZt2ze0jTQTOBTEcCo_fN0ux/exec";
+
+// Paste your iPhone Shortcut's iCloud share link here once you've made it
+// (Shortcuts app → open the shortcut → ⋯ → Share → Copy iCloud Link).
+// Example: "https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+// Leave it as "" and every Shortcut prompt in the app stays hidden.
+const SHORTCUT_URL = "";
+/* ============================================================ */
 const state = {pins:[],filter:"all",search:"",installPrompt:null,lightboxPin:null,zoom:1,panX:0,panY:0,userId:localStorage.getItem("campboard-user-id")||crypto.randomUUID()};
 localStorage.setItem("campboard-user-id",state.userId);
 const $=s=>document.querySelector(s);
-const els={grid:$("#pinGrid"),empty:$("#emptyState"),sync:$("#syncStatus"),live:$("#liveText"),composer:$("#composer"),form:$("#pinForm"),url:$("#urlInput"),title:$("#titleInput"),author:$("#authorInput"),category:$("#categoryInput"),error:$("#formError"),save:$("#saveButton"),lightbox:$("#lightbox"),lightboxContent:$("#lightboxContent"),lightboxTitle:$("#lightboxTitle"),lightboxAuthor:$("#lightboxAuthor"),lightboxOriginal:$("#lightboxOriginal"),lightboxShare:$("#lightboxShare"),installButton:$("#installButton"),androidBanner:$("#androidBanner"),iosBanner:$("#iosBanner"),search:$("#searchInput"),clearSearch:$("#clearSearch"),notice:$("#apiNotice"),profile:$("#profileButton")};
+const els={grid:$("#pinGrid"),empty:$("#emptyState"),sync:$("#syncStatus"),live:$("#liveText"),composer:$("#composer"),form:$("#pinForm"),url:$("#urlInput"),title:$("#titleInput"),author:$("#authorInput"),category:$("#categoryInput"),error:$("#formError"),save:$("#saveButton"),lightbox:$("#lightbox"),lightboxContent:$("#lightboxContent"),lightboxTitle:$("#lightboxTitle"),lightboxAuthor:$("#lightboxAuthor"),lightboxOriginal:$("#lightboxOriginal"),lightboxShare:$("#lightboxShare"),installButton:$("#installButton"),androidBanner:$("#androidBanner"),iosBanner:$("#iosBanner"),shortcutBanner:$("#shortcutBanner"),shortcutBannerBtn:$("#shortcutBannerBtn"),getShortcut:$("#getShortcutBtn"),search:$("#searchInput"),clearSearch:$("#clearSearch"),notice:$("#apiNotice"),profile:$("#profileButton")};
 function safeUrl(v){try{const u=new URL(v);return["http:","https:"].includes(u.protocol)?u:null}catch{return null}}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function domainOf(u){try{return new URL(u).hostname.replace(/^www\./,"")}catch{return""}}
@@ -58,7 +69,12 @@ async function share(url,title){if(navigator.share){try{await navigator.share({t
 els.lightboxShare.onclick=()=>state.lightboxPin&&share(state.lightboxPin.url,state.lightboxPin.title);$("#shareBoard").onclick=()=>share(location.href,"Camp Board — Outdoor Ed planning board");
 function updateAvatar(){els.profile.textContent=initials(localStorage.getItem("campboard-author")||"Anonymous")}
 els.profile.onclick=()=>{const cur=localStorage.getItem("campboard-author")||"";const next=prompt("Your name (shown on pins you add):",cur);if(next===null)return;const name=next.trim()||"Anonymous";localStorage.setItem("campboard-author",name);els.author.value=name;updateAvatar()};
-function install(){window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;els.installButton.hidden=false;els.androidBanner.hidden=false});els.installButton.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;els.installButton.hidden=true;els.androidBanner.hidden=true};$("#installNow").onclick=()=>els.installButton.click();const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),standalone=isStandaloneMode();if(ios&&!standalone&&!localStorage.getItem("campboard-ios-dismissed"))els.iosBanner.hidden=false;document.querySelectorAll("[data-dismiss]").forEach(b=>b.onclick=()=>{document.getElementById(b.dataset.dismiss).hidden=true;if(b.dataset.dismiss==="iosBanner")localStorage.setItem("campboard-ios-dismissed","1")})}
+function install(){window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;els.installButton.hidden=false;els.androidBanner.hidden=false});els.installButton.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;els.installButton.hidden=true;els.androidBanner.hidden=true};$("#installNow").onclick=()=>els.installButton.click();const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),standalone=isStandaloneMode();if(ios&&!standalone&&!localStorage.getItem("campboard-ios-dismissed"))els.iosBanner.hidden=false;document.querySelectorAll("[data-dismiss]").forEach(b=>b.onclick=()=>{document.getElementById(b.dataset.dismiss).hidden=true;if(b.dataset.dismiss==="iosBanner")localStorage.setItem("campboard-ios-dismissed","1");if(b.dataset.dismiss==="shortcutBanner")localStorage.setItem("campboard-shortcut-dismissed","1")})}
+function initShortcutPrompt(){
+  if(!SHORTCUT_URL||!isIOSUA())return;
+  els.getShortcut.href=SHORTCUT_URL;els.getShortcut.hidden=false;
+  if(isStandaloneMode()&&!localStorage.getItem("campboard-shortcut-dismissed")){els.shortcutBannerBtn.href=SHORTCUT_URL;els.shortcutBanner.hidden=false}
+}
 async function pwa(){if("serviceWorker"in navigator){try{await navigator.serviceWorker.register("./sw.js",{scope:"./"})}catch(e){console.warn(e)}}}
 function shareParams(){const q=new URLSearchParams(location.search);const u=q.get("url")||q.get("text");if(u&&safeUrl(u)){showComposer({url:u,title:q.get("title")||""});history.replaceState({}, "", location.pathname)}if(q.get("create")==="1")showComposer()}
 function poll(){setInterval(async()=>{if(document.hidden)return;try{const d=await apiGet("listPins");const n=(d.pins??d.rows??d.data??[]).map(norm).filter(p=>p.url);if(JSON.stringify(state.pins.map(p=>p.id))!==JSON.stringify(n.map(p=>p.id))){state.pins=n.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));render()}}catch{}},8000)}
@@ -80,4 +96,4 @@ function initInstallGate(){
   gateInstallBtn.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;gateInstallBtn.hidden=true};
 }
 
-document.addEventListener("DOMContentLoaded",async()=>{els.author.value=localStorage.getItem("campboard-author")||"";updateAvatar();initInstallGate();install();await pwa();await load();poll();shareParams()})
+document.addEventListener("DOMContentLoaded",async()=>{els.author.value=localStorage.getItem("campboard-author")||"";updateAvatar();initInstallGate();install();initShortcutPrompt();await pwa();await load();poll();shareParams()})

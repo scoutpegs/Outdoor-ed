@@ -43,6 +43,7 @@
       <p class="subtext">Pin routes, gear lists, activity ideas and photos so the whole crew is looking at the same board. Add something and everyone sees it appear.</p>
     </div>
     <div class="hero-actions">
+      <a class="secondary-btn" id="getShortcutBtn" href="#" target="_blank" rel="noopener" hidden>Get iPhone Shortcut</a>
       <button class="secondary-btn" id="shareBoard">Share board</button>
       <div class="sync-pill"><span class="dot"></span><span id="liveText">Live board</span></div>
     </div>
@@ -83,6 +84,11 @@
   <div><strong>Add Camp Board to your Home Screen</strong><p>Safari → Share → Add to Home Screen. This makes the board feel like a real app.</p></div>
   <button class="close-mini" data-dismiss="iosBanner">×</button>
 </div>
+<div class="install-sheet" id="shortcutBanner" hidden>
+  <div><strong>Add the sharing Shortcut</strong><p>Install it once and you can share any link straight to Camp Board from the Share Sheet — no need to open the app first.</p></div>
+  <a class="primary-btn small" id="shortcutBannerBtn" href="#" target="_blank" rel="noopener">Get Shortcut</a>
+  <button class="close-mini" data-dismiss="shortcutBanner">×</button>
+</div>
 <div class="install-sheet" id="androidBanner" hidden>
   <div><strong>Install Camp Board</strong><p>Install it for the best experience and to share links straight into the board.</p></div>
   <button class="primary-btn small" id="installNow">Install</button>
@@ -122,7 +128,7 @@
         <li><span class="num">4</span><span>Tap <strong>Add</strong> in the top right.</span></li>
         <li><span class="num">5</span><span>Close this browser tab, then open <strong>Camp Board</strong> from the icon that's now on your Home Screen.</span></li>
       </ol>
-      <p class="gate-note">Already added it? Go to your Home Screen and open the Camp Board icon from there — reloading this browser tab won't switch it over.</p>
+      <p class="gate-note">Already added it? Go to your Home Screen and open the Camp Board icon from there — reloading this browser tab won't switch it over. Once you're in, we'll also offer a Shortcut so you can share links to the board straight from Safari.</p>
     </div>
     <div class="gate-panel" id="gatePanelAndroid">
       <ol class="gate-steps">

@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#c1391f"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="./styles.css"><title>Adding to Camp Board…</title></head>
 <body><main style="min-height:100vh;display:grid;place-items:center;padding:24px"><section class="composer" style="width:min(560px,100%)"><p class="eyebrow">CAMP BOARD</p><h1 style="font-size:32px">Adding your share…</h1><p class="subtext">Saving the shared link to the group's Google Sheets board.</p><p class="hint" id="status">Connecting…</p></section></main>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbywKJ9E_dCTmjl0PWn-g3DcQKGHhdfPG0AyW_paAlztkfSzLbIVMtIhLuVseFKAYdpc/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbzz9GSNzR_KJvljoZMS6ezE05V5uevue7XLxRh5eImapZt2ze0jTQTOBTEcCo_fN0ux/exec';
 function valid(v){try{const u=new URL(v);return["http:","https:"].includes(u.protocol)?u.href:""}catch{return""}}
 function category(url){try{const u=new URL(url),h=u.hostname.toLowerCase(),p=u.pathname.toLowerCase();if(/youtube|youtu\.be|tiktok/.test(h)||/\.(mp4|webm|ogg|mov)$/.test(p))return"video";if(/pinterest|instagram/.test(h)||/\.(jpg|jpeg|png|gif|webp|avif)$/.test(p))return"photo"}catch{}return"idea"}
 (async()=>{

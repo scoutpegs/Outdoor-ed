@@ -2,13 +2,17 @@
 
 A Pinterest-style shared board for planning Outdoor Ed camp: pin routes, gear lists, activity ideas, and photos so the whole crew is looking at the same board. Runs on Google Sheets + Apps Script, no database to manage.
 
-It still uses your existing Apps Script deployment:
+It uses this Apps Script deployment:
 
 ```
-https://script.google.com/macros/s/AKfycbywKJ9E_dCTmjl0PWn-g3DcQKGHhdfPG0AyW_paAlztkfSzLbIVMtIhLuVseFKAYdpc/exec
+https://script.google.com/macros/s/AKfycbzz9GSNzR_KJvljoZMS6ezE05V5uevue7XLxRh5eImapZt2ze0jTQTOBTEcCo_fN0ux/exec
 ```
 
-If that URL ever changes (e.g. you redeploy the Apps Script), update `API_URL` at the top of **app.js** and **share-handler.html**.
+If that URL ever changes (e.g. you redeploy the Apps Script), it's set in exactly two places — a config block at the very top of **app.js**, and a matching line near the top of **share-handler.html**'s script:
+
+```js
+const API_URL = "https://script.google.com/macros/s/.../exec";
+```
 
 ## What changed in this pass
 - Renamed everything from "Pinboard" to **Camp Board**, with copy aimed at Outdoor Ed camp planning instead of a generic board.
@@ -29,7 +33,7 @@ True "Share to Camp Board" from the iOS Share Sheet (the way Android's Chrome su
 
 **1. Open the app and tap "Add a pin."** Fastest if you're already in Camp Board.
 
-**2. Build an iPhone Shortcut that posts straight to the board.** This gives you a genuine Share Sheet entry — tap Share on any link, tap the shortcut, done, no need to open the app at all. Steps below.
+**2. Build an iPhone Shortcut that posts straight to the board.** This gives you a genuine Share Sheet entry — tap Share on any link, tap the shortcut, done, no need to open the app at all. Once it exists, the app itself can prompt everyone else to install it too (see "Wiring the Shortcut into the app" below).
 
 ### Setting up the "Add to Camp Board" Shortcut
 1. Open the **Shortcuts** app → tap **+** (top right) to create a new shortcut.
@@ -42,16 +46,38 @@ True "Share to Camp Board" from the iOS Share Sheet (the way Android's Chrome su
    - Delete `SHORTCUTINPUT` and insert the magic variable **Shortcut Input** (tap inside the text field where you deleted it — Shortcuts will offer it above the keyboard).
    - Replace `YOUR NAME` with your actual name, e.g. `Alex`, so pins you share show who added them.
 4. Add a second action: search for **Get Contents of URL**. Configure it:
-   - URL: paste the same Apps Script URL used above.
+   - URL: paste the Apps Script URL from the top of this README.
    - Method: **POST**
    - Headers: add one — Key `Content-Type`, Value `text/plain;charset=UTF-8`
    - Request Body: **Text**, then tap the field and insert the Text action from step 2 as the value.
 5. Optional but nice: add a **Show Notification** action at the end with the text "Added to Camp Board" so you get confirmation it worked.
 6. Tap the shortcut's name at the top and rename it **Add to Camp Board**.
 7. Tap the settings icon (ⓘ) for the shortcut → turn on **Show in Share Sheet** → under "Share Sheet Types," make sure **URLs** (and **Text**, if you also want to share plain text) is enabled.
-8. Done. Now from Safari, Instagram, Photos, or anywhere else with a Share button: tap **Share** → scroll the app icons row → tap **Add to Camp Board** (tap **Edit Actions** at the end of the row first if it isn't listed, then add it and tap Done). It posts straight to the Sheet in the background.
+8. Test it: from Safari, tap **Share** on any page → scroll the app icons row → tap **Add to Camp Board** (tap **Edit Actions** first if it isn't listed yet, add it, tap Done). It should post straight to the Sheet in the background.
 
 **Limitation to know about:** pins added through the Shortcut use a fixed `author_id` of `iphone-shortcut`, separate from your phone's copy of the installed web app. That means they'll all show a delete button to anyone using this same Shortcut, but the delete button won't show up for pins you add from inside the installed app itself (different device ID), and vice versa. If that's not fine-grained enough for your group, the simplest fix is deleting stray pins directly from the Google Sheet.
+
+### Wiring the Shortcut into the app
+Once the Shortcut above works, get a link for it that anyone can tap to install their own copy:
+
+1. In the Shortcuts app, open **Add to Camp Board** → tap **⋯** → **Share** → **Copy iCloud Link**.
+2. Open **app.js** and find the config block right at the top:
+   ```js
+   /* ============================================================
+      CONFIG — the only two lines you should ever need to touch
+      ============================================================ */
+   const API_URL = "https://script.google.com/macros/s/.../exec";
+   const SHORTCUT_URL = "";
+   /* ============================================================ */
+   ```
+3. Paste the link between the quotes on `SHORTCUT_URL`, e.g. `const SHORTCUT_URL = "https://www.icloud.com/shortcuts/xxxxxxxxxxxxxxxxxxxxxxxxxxxx";`
+4. Re-deploy/upload the file. That's it — nothing else in the app needs editing.
+
+With `SHORTCUT_URL` set, on any iPhone the app now:
+- Shows a **Get iPhone Shortcut** link in the hero, next to "Share board", at any time.
+- Shows a one-time banner offering the Shortcut the first time someone opens the installed app on their Home Screen (dismissible, won't nag again).
+
+Tapping either opens Apple's standard "Get Shortcut" preview page for the link you pasted, where the person taps **Add Shortcut** to install their own copy — no code or setup on their end. Leave `SHORTCUT_URL` as `""` and both of those stay hidden.
 
 ## Apps Script API contract (unchanged)
 The frontend expects:
