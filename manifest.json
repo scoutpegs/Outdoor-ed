@@ -1,13 +1,13 @@
 {
-  "name": "Pinboard \u2014 Collaborative Board",
-  "short_name": "Pinboard",
-  "description": "Pinterest-style collaborative board using Google Sheets.",
+  "name": "Camp Board — Outdoor Ed Planning",
+  "short_name": "Camp Board",
+  "description": "The shared planning board for Outdoor Ed camp — pin routes, gear, activities and photos in one place.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#ffffff",
-  "theme_color": "#e60023",
+  "background_color": "#fbf8f2",
+  "theme_color": "#c1391f",
   "icons": [
     {
       "src": "https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png",
@@ -33,8 +33,8 @@
   },
   "shortcuts": [
     {
-      "name": "Create Pin",
-      "short_name": "Create",
+      "name": "Add a pin",
+      "short_name": "Add pin",
       "url": "./index.html?create=1",
       "icons": [
         {

@@ -1,9 +1,9 @@
-/* Pinboard — Google Apps Script / Google Sheets edition */
+/* Camp Board — Outdoor Ed shared planning board (Google Apps Script / Google Sheets edition) */
 const API_URL = "https://script.google.com/macros/s/AKfycbywKJ9E_dCTmjl0PWn-g3DcQKGHhdfPG0AyW_paAlztkfSzLbIVMtIhLuVseFKAYdpc/exec";
-const state = {pins:[],filter:"all",search:"",installPrompt:null,lightboxPin:null,zoom:1,panX:0,panY:0,userId:localStorage.getItem("pinboard-user-id")||crypto.randomUUID()};
-localStorage.setItem("pinboard-user-id",state.userId);
+const state = {pins:[],filter:"all",search:"",installPrompt:null,lightboxPin:null,zoom:1,panX:0,panY:0,userId:localStorage.getItem("campboard-user-id")||crypto.randomUUID()};
+localStorage.setItem("campboard-user-id",state.userId);
 const $=s=>document.querySelector(s);
-const els={grid:$("#pinGrid"),empty:$("#emptyState"),sync:$("#syncStatus"),live:$("#liveText"),composer:$("#composer"),form:$("#pinForm"),url:$("#urlInput"),title:$("#titleInput"),author:$("#authorInput"),category:$("#categoryInput"),error:$("#formError"),save:$("#saveButton"),lightbox:$("#lightbox"),lightboxContent:$("#lightboxContent"),lightboxTitle:$("#lightboxTitle"),lightboxAuthor:$("#lightboxAuthor"),lightboxOriginal:$("#lightboxOriginal"),lightboxShare:$("#lightboxShare"),installButton:$("#installButton"),androidBanner:$("#androidBanner"),iosBanner:$("#iosBanner"),search:$("#searchInput"),clearSearch:$("#clearSearch"),notice:$("#apiNotice")};
+const els={grid:$("#pinGrid"),empty:$("#emptyState"),sync:$("#syncStatus"),live:$("#liveText"),composer:$("#composer"),form:$("#pinForm"),url:$("#urlInput"),title:$("#titleInput"),author:$("#authorInput"),category:$("#categoryInput"),error:$("#formError"),save:$("#saveButton"),lightbox:$("#lightbox"),lightboxContent:$("#lightboxContent"),lightboxTitle:$("#lightboxTitle"),lightboxAuthor:$("#lightboxAuthor"),lightboxOriginal:$("#lightboxOriginal"),lightboxShare:$("#lightboxShare"),installButton:$("#installButton"),androidBanner:$("#androidBanner"),iosBanner:$("#iosBanner"),search:$("#searchInput"),clearSearch:$("#clearSearch"),notice:$("#apiNotice"),profile:$("#profileButton")};
 function safeUrl(v){try{const u=new URL(v);return["http:","https:"].includes(u.protocol)?u:null}catch{return null}}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function domainOf(u){try{return new URL(u).hostname.replace(/^www\./,"")}catch{return""}}
@@ -18,15 +18,35 @@ function embed(pin){const m=detectMedia(pin.url),w=document.createElement("div")
 let instagramLoaded=false;function loadInstagram(){if(instagramLoaded){window.instgrm?.Embeds?.process();return}instagramLoaded=true;const s=document.createElement("script");s.async=true;s.src="https://www.instagram.com/embed.js";s.onload=()=>window.instgrm?.Embeds?.process();document.body.appendChild(s)}
 function current(){const q=state.search.trim().toLowerCase();return state.pins.filter(p=>(state.filter==="all"||p.category===state.filter)&&(!q||[p.title,p.author,p.url,p.category,domainOf(p.url)].join(" ").toLowerCase().includes(q)))}
 function render(){els.grid.innerHTML="";const list=current();els.empty.hidden=!!list.length;if(!list.length)return;const f=document.createDocumentFragment();list.forEach(p=>f.appendChild(card(p)));els.grid.appendChild(f)}
-function card(pin){const a=document.createElement("article");a.className="pin-card";const m=document.createElement("div");m.className="media-wrap";m.appendChild(embed(pin));const o=document.createElement("div");o.className="card-overlay";o.innerHTML=`<button class="overlay-btn open">Open</button><button class="overlay-btn expand">Expand</button>`;o.querySelector(".open").onclick=e=>{e.stopPropagation();open(pin.url)};o.querySelector(".expand").onclick=e=>{e.stopPropagation();openLightbox(pin)};m.appendChild(o);if(pin.author_id===state.userId&&pin.author_id){const d=document.createElement("button");d.className="delete-chip";d.textContent="Delete";d.onclick=e=>{e.stopPropagation();deletePin(pin)};m.appendChild(d)}const b=document.createElement("div");b.className="pin-body";b.innerHTML=`<p class="pin-title">${esc(pin.title||domainOf(pin.url)||"Untitled")}</p><div class="pin-source">${esc(domainOf(pin.url))}</div><div class="pin-footer"><div class="author"><span class="avatar">${esc(initials(pin.author))}</span><span class="author-name">${esc(pin.author||"Anonymous")}</span></div><span class="timestamp">${esc(relTime(pin.created_at))}</span></div>`;a.append(m,b);a.onclick=()=>openLightbox(pin);return a}
+function card(pin){
+  const a=document.createElement("article");a.className="pin-card";
+  const m=document.createElement("div");m.className="media-wrap";
+  m.appendChild(embed(pin));
+  const ov=document.createElement("div");ov.className="card-overlay";
+  ov.innerHTML=`<div class="overlay-top"><button class="overlay-btn expand" type="button">Expand</button></div><button class="link-chip" type="button"><span>${esc(domainOf(pin.url)||"Link")}</span></button>`;
+  ov.querySelector(".expand").onclick=e=>{e.stopPropagation();openLightbox(pin)};
+  ov.querySelector(".link-chip").onclick=e=>{e.stopPropagation();open(pin.url)};
+  if(pin.author_id===state.userId&&pin.author_id){
+    const d=document.createElement("button");d.className="delete-chip";d.type="button";d.setAttribute("aria-label","Delete pin");d.textContent="✕";
+    d.onclick=e=>{e.stopPropagation();deletePin(pin)};
+    ov.appendChild(d);
+  }
+  m.appendChild(ov);
+  const b=document.createElement("div");b.className="pin-body";
+  b.innerHTML=`<p class="pin-title">${esc(pin.title||domainOf(pin.url)||"Untitled")}</p><div class="pin-source">${esc(domainOf(pin.url))}</div><div class="pin-footer"><div class="author"><span class="avatar">${esc(initials(pin.author))}</span><span class="author-name">${esc(pin.author||"Anonymous")}</span></div><span class="timestamp">${esc(relTime(pin.created_at))}</span></div>`;
+  a.append(m,b);
+  a.onclick=()=>openLightbox(pin);
+  return a;
+}
 function loading(){els.grid.innerHTML="";for(let i=0;i<10;i++){const x=document.createElement("div");x.className="skeleton";x.style.height=`${160+(i*53)%180}px`;els.grid.appendChild(x)}}
 async function load(){loading();try{const d=await apiGet("listPins");state.pins=(d.pins??d.rows??d.data??[]).map(norm).filter(p=>p.url).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));els.sync.textContent="Connected";els.live.textContent="Live board";els.notice.style.display="none";render()}catch(e){els.sync.textContent="Setup needed";els.live.textContent="Google Sheets";els.notice.textContent=e.message;els.notice.style.display="block";els.grid.innerHTML=""}}
-async function add(){const u=safeUrl(els.url.value);if(!u)throw new Error("Enter a valid web link.");const author=els.author.value.trim()||"Anonymous";const row={id:crypto.randomUUID(),created_at:new Date().toISOString(),url:u.href,title:els.title.value.trim()||domainOf(u.href),author,author_id:state.userId,category:["video","photo","idea"].includes(els.category.value)?els.category.value:guessCategory(u.href)};await apiPost("addPin",row);state.pins.unshift(row);localStorage.setItem("pinboard-author",author);render()}
+async function add(){const u=safeUrl(els.url.value);if(!u)throw new Error("Enter a valid web link.");const author=els.author.value.trim()||"Anonymous";const row={id:crypto.randomUUID(),created_at:new Date().toISOString(),url:u.href,title:els.title.value.trim()||domainOf(u.href),author,author_id:state.userId,category:["video","photo","idea"].includes(els.category.value)?els.category.value:guessCategory(u.href)};await apiPost("addPin",row);state.pins.unshift(row);localStorage.setItem("campboard-author",author);updateAvatar();render()}
 async function deletePin(pin){if(pin.author_id!==state.userId)return alert("You can only delete pins you added.");if(!confirm("Delete this pin?"))return;try{await apiPost("deletePin",{id:pin.id,author_id:state.userId});state.pins=state.pins.filter(p=>p.id!==pin.id);render()}catch(e){alert(e.message)}}
-function showComposer(prefill={}){els.composer.hidden=false;els.url.value=prefill.url||"";els.title.value=prefill.title||"";els.author.value=localStorage.getItem("pinboard-author")||"";els.category.value=prefill.url?guessCategory(prefill.url):"idea";setTimeout(()=>els.url.focus(),20);window.scrollTo({top:0,behavior:"smooth"})}
-function hideComposer(){els.composer.hidden=true;els.form.reset();els.error.hidden=true;els.author.value=localStorage.getItem("pinboard-author")||""}
-els.form.onsubmit=async e=>{e.preventDefault();els.save.disabled=true;els.save.textContent="Saving…";try{await add();hideComposer()}catch(err){els.error.textContent=err.message;els.error.hidden=false}finally{els.save.disabled=false;els.save.textContent="Add Pin"}}
+function showComposer(prefill={}){els.composer.hidden=false;els.url.value=prefill.url||"";els.title.value=prefill.title||"";els.author.value=localStorage.getItem("campboard-author")||"";els.category.value=prefill.url?guessCategory(prefill.url):"idea";setTimeout(()=>els.url.focus(),20);window.scrollTo({top:0,behavior:"smooth"})}
+function hideComposer(){els.composer.hidden=true;els.form.reset();els.error.hidden=true;els.author.value=localStorage.getItem("campboard-author")||""}
+els.form.onsubmit=async e=>{e.preventDefault();els.save.disabled=true;els.save.textContent="Saving…";try{await add();hideComposer()}catch(err){els.error.textContent=err.message;els.error.hidden=false}finally{els.save.disabled=false;els.save.textContent="Add pin"}}
 $("#addButton").onclick=()=>showComposer();$("#emptyAdd").onclick=()=>showComposer();$("#closeComposer").onclick=hideComposer;
+$("#homeButton").onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));document.querySelector('.filter[data-filter="all"]').classList.add("active");state.filter="all";state.search="";els.search.value="";els.clearSearch.hidden=true;render();window.scrollTo({top:0,behavior:"smooth"})};
 document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;render()});
 els.search.oninput=()=>{state.search=els.search.value;els.clearSearch.hidden=!state.search;render()};els.clearSearch.onclick=()=>{els.search.value="";state.search="";els.clearSearch.hidden=true;render()};
 function open(u){window.open(u,"_blank","noopener,noreferrer")}
@@ -34,10 +54,30 @@ function openLightbox(pin){state.lightboxPin=pin;state.zoom=1;state.panX=0;state
 function closeLightbox(){els.lightbox.hidden=true;document.body.style.overflow="";els.lightboxContent.innerHTML="";state.lightboxPin=null}
 document.querySelectorAll("[data-close-lightbox]").forEach(x=>x.onclick=closeLightbox);document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!els.lightbox.hidden)closeLightbox()});
 function attachZoom(){const t=els.lightboxContent.firstElementChild;if(!t||!["IMG","VIDEO"].includes(t.tagName))return;let dragging=false,sx=0,sy=0,ox=0,oy=0;const apply=()=>t.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${state.zoom})`;$("#lightboxStage").onwheel=e=>{e.preventDefault();state.zoom=Math.min(4,Math.max(1,state.zoom+(e.deltaY<0?.15:-.15)));if(state.zoom===1){state.panX=0;state.panY=0}apply()};t.onpointerdown=e=>{if(state.zoom<=1)return;dragging=true;t.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;ox=state.panX;oy=state.panY};t.onpointermove=e=>{if(!dragging)return;state.panX=ox+e.clientX-sx;state.panY=oy+e.clientY-sy;apply()};t.onpointerup=()=>dragging=false}
-async function share(url,title){if(navigator.share){try{await navigator.share({title:title||"Pinboard",text:title||"Shared from Pinboard",url});return}catch(e){if(e?.name==="AbortError")return}}try{await navigator.clipboard.writeText(url);alert("Link copied to clipboard.")}catch{alert(url)}}
-els.lightboxShare.onclick=()=>state.lightboxPin&&share(state.lightboxPin.url,state.lightboxPin.title);$("#shareBoard").onclick=()=>share(location.href,"Pinboard collaborative board");
-function install(){window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;els.installButton.hidden=false;els.androidBanner.hidden=false});els.installButton.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;els.installButton.hidden=true;els.androidBanner.hidden=true};$("#installNow").onclick=()=>els.installButton.click();const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),standalone=matchMedia?.("(display-mode: standalone)").matches||navigator.standalone;if(ios&&!standalone&&!localStorage.getItem("pinboard-ios-dismissed"))els.iosBanner.hidden=false;document.querySelectorAll("[data-dismiss]").forEach(b=>b.onclick=()=>{document.getElementById(b.dataset.dismiss).hidden=true;if(b.dataset.dismiss==="iosBanner")localStorage.setItem("pinboard-ios-dismissed","1")})}
+async function share(url,title){if(navigator.share){try{await navigator.share({title:title||"Camp Board",text:title||"Shared from Camp Board",url});return}catch(e){if(e?.name==="AbortError")return}}try{await navigator.clipboard.writeText(url);alert("Link copied to clipboard.")}catch{alert(url)}}
+els.lightboxShare.onclick=()=>state.lightboxPin&&share(state.lightboxPin.url,state.lightboxPin.title);$("#shareBoard").onclick=()=>share(location.href,"Camp Board — Outdoor Ed planning board");
+function updateAvatar(){els.profile.textContent=initials(localStorage.getItem("campboard-author")||"Anonymous")}
+els.profile.onclick=()=>{const cur=localStorage.getItem("campboard-author")||"";const next=prompt("Your name (shown on pins you add):",cur);if(next===null)return;const name=next.trim()||"Anonymous";localStorage.setItem("campboard-author",name);els.author.value=name;updateAvatar()};
+function install(){window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;els.installButton.hidden=false;els.androidBanner.hidden=false});els.installButton.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;els.installButton.hidden=true;els.androidBanner.hidden=true};$("#installNow").onclick=()=>els.installButton.click();const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),standalone=isStandaloneMode();if(ios&&!standalone&&!localStorage.getItem("campboard-ios-dismissed"))els.iosBanner.hidden=false;document.querySelectorAll("[data-dismiss]").forEach(b=>b.onclick=()=>{document.getElementById(b.dataset.dismiss).hidden=true;if(b.dataset.dismiss==="iosBanner")localStorage.setItem("campboard-ios-dismissed","1")})}
 async function pwa(){if("serviceWorker"in navigator){try{await navigator.serviceWorker.register("./sw.js",{scope:"./"})}catch(e){console.warn(e)}}}
 function shareParams(){const q=new URLSearchParams(location.search);const u=q.get("url")||q.get("text");if(u&&safeUrl(u)){showComposer({url:u,title:q.get("title")||""});history.replaceState({}, "", location.pathname)}if(q.get("create")==="1")showComposer()}
 function poll(){setInterval(async()=>{if(document.hidden)return;try{const d=await apiGet("listPins");const n=(d.pins??d.rows??d.data??[]).map(norm).filter(p=>p.url);if(JSON.stringify(state.pins.map(p=>p.id))!==JSON.stringify(n.map(p=>p.id))){state.pins=n.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));render()}}catch{}},8000)}
-document.addEventListener("DOMContentLoaded",async()=>{els.author.value=localStorage.getItem("pinboard-author")||"";install();await pwa();await load();poll();shareParams()})
+
+/* ---------- Install gate: blocks use on phones until added to the Home Screen ---------- */
+function isMobileUA(){return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)}
+function isIOSUA(){return /iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
+function isStandaloneMode(){return (matchMedia?.("(display-mode: standalone)").matches)||navigator.standalone===true||document.referrer.includes("android-app://")}
+function initInstallGate(){
+  if(!isMobileUA()||isStandaloneMode())return;
+  document.documentElement.classList.add("gate-active");document.body.classList.add("gate-active");
+  const gate=$("#installGate");gate.hidden=false;
+  const tabIOS=$("#gateTabIOS"),tabAndroid=$("#gateTabAndroid"),panelIOS=$("#gatePanelIOS"),panelAndroid=$("#gatePanelAndroid");
+  function activate(which){tabIOS.classList.toggle("active",which==="ios");tabAndroid.classList.toggle("active",which==="android");panelIOS.classList.toggle("active",which==="ios");panelAndroid.classList.toggle("active",which==="android")}
+  tabIOS.onclick=()=>activate("ios");tabAndroid.onclick=()=>activate("android");
+  activate(isIOSUA()?"ios":"android");
+  const gateInstallBtn=$("#gateInstallNow");
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();state.installPrompt=e;gateInstallBtn.hidden=false});
+  gateInstallBtn.onclick=async()=>{if(!state.installPrompt)return;state.installPrompt.prompt();await state.installPrompt.userChoice;state.installPrompt=null;gateInstallBtn.hidden=true};
+}
+
+document.addEventListener("DOMContentLoaded",async()=>{els.author.value=localStorage.getItem("campboard-author")||"";updateAvatar();initInstallGate();install();await pwa();await load();poll();shareParams()})

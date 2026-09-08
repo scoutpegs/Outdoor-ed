@@ -3,43 +3,47 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#e60023">
+<meta name="theme-color" content="#c1391f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Pinboard">
+<meta name="apple-mobile-web-app-title" content="Camp Board">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" href="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png">
 <link rel="apple-touch-icon" href="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png">
 <link rel="preconnect" href="https://images.squarespace-cdn.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./styles.css">
-<title>Pinboard</title>
+<title>Camp Board</title>
 </head>
 <body>
 <div id="app">
 <header class="topbar">
-  <div class="brand" id="homeButton" role="button" tabindex="0" aria-label="Go home">
-    <img class="brand-img" src="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png" alt="" width="40" height="40">
-    <div><strong>Pinboard</strong><span id="syncStatus">Connecting…</span></div>
-  </div>
+  <button class="brand" id="homeButton" aria-label="Go home">
+    <img class="brand-img" src="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png" alt="" width="38" height="38">
+    <div><strong>Camp Board</strong><span id="syncStatus">Connecting…</span></div>
+  </button>
   <div class="search-wrap">
     <span class="search-icon">⌕</span>
-    <input id="searchInput" type="search" placeholder="Search your board" autocomplete="off">
+    <input id="searchInput" type="search" placeholder="Search the board" autocomplete="off">
     <button id="clearSearch" class="clear-search" aria-label="Clear search" hidden>×</button>
   </div>
   <div class="top-actions">
     <button class="icon-btn" id="installButton" hidden title="Install">＋</button>
-    <button class="primary-btn" id="addButton">Create</button>
+    <button class="avatar-btn" id="profileButton" title="Your name">A</button>
+    <button class="primary-btn" id="addButton">Add a pin</button>
   </div>
 </header>
 <main class="page">
   <section class="hero">
     <div>
-      <p class="eyebrow">YOUR COLLABORATIVE BOARD</p>
-      <h1>Ideas worth keeping.</h1>
-      <p class="subtext">Save links, photos and videos in one Pinterest-style board. New pins appear automatically.</p>
+      <p class="eyebrow">OUTDOOR ED · SHARED PLANNING BOARD</p>
+      <h1>Plan camp, together.</h1>
+      <p class="subtext">Pin routes, gear lists, activity ideas and photos so the whole crew is looking at the same board. Add something and everyone sees it appear.</p>
     </div>
     <div class="hero-actions">
-      <button class="secondary-btn" id="shareBoard">Share Board</button>
+      <button class="secondary-btn" id="shareBoard">Share board</button>
       <div class="sync-pill"><span class="dot"></span><span id="liveText">Live board</span></div>
     </div>
   </section>
@@ -52,18 +56,18 @@
   <section class="composer" id="composer" hidden>
     <form id="pinForm" autocomplete="off">
       <div class="composer-head">
-        <div><p class="eyebrow">NEW PIN</p><h2>Save something</h2></div>
+        <div><p class="eyebrow">NEW PIN</p><h2>Add to the board</h2></div>
         <button type="button" class="close-btn" id="closeComposer" aria-label="Close">×</button>
       </div>
       <div class="form-grid">
         <label><span>Link</span><input id="urlInput" type="url" placeholder="https://…" required></label>
-        <label><span>Title</span><input id="titleInput" maxlength="140" placeholder="What should this pin be called?"></label>
+        <label><span>Title</span><input id="titleInput" maxlength="140" placeholder="What is this?"></label>
         <label><span>Your name</span><input id="authorInput" maxlength="40" placeholder="Anonymous"></label>
         <label><span>Category</span><select id="categoryInput"><option value="idea">Idea</option><option value="photo">Photo</option><option value="video">Video</option></select></label>
       </div>
       <div class="composer-foot">
-        <span class="hint">Links are stored in your Google Sheet through your Apps Script endpoint.</span>
-        <button class="primary-btn" type="submit" id="saveButton">Add Pin</button>
+        <span class="hint">Pins are stored in the group's Google Sheet.</span>
+        <button class="primary-btn" type="submit" id="saveButton">Add pin</button>
       </div>
       <p class="error" id="formError" hidden></p>
     </form>
@@ -71,16 +75,16 @@
   <div id="apiNotice" class="notice"></div>
   <section class="pin-grid" id="pinGrid" aria-live="polite"></section>
   <div id="emptyState" class="empty-state" hidden>
-    <div class="empty-icon">✦</div><h2>No pins yet</h2><p>Add your first link to start the board.</p>
-    <button class="primary-btn" id="emptyAdd">Create first pin</button>
+    <div class="empty-icon">✦</div><h2>No pins yet</h2><p>Add the first link to start the board.</p>
+    <button class="primary-btn" id="emptyAdd">Add the first pin</button>
   </div>
 </main>
 <div class="install-sheet" id="iosBanner" hidden>
-  <div><strong>Add Pinboard to your Home Screen</strong><p>Safari → Share → Add to Home Screen. This makes the board feel like a standalone app. iOS does not currently expose Web Share Target receiving for PWAs.</p></div>
+  <div><strong>Add Camp Board to your Home Screen</strong><p>Safari → Share → Add to Home Screen. This makes the board feel like a real app.</p></div>
   <button class="close-mini" data-dismiss="iosBanner">×</button>
 </div>
 <div class="install-sheet" id="androidBanner" hidden>
-  <div><strong>Install Pinboard</strong><p>Install the PWA for the best experience. Supported Android browsers can then register Pinboard as a native share target.</p></div>
+  <div><strong>Install Camp Board</strong><p>Install it for the best experience and to share links straight into the board.</p></div>
   <button class="primary-btn small" id="installNow">Install</button>
   <button class="close-mini" data-dismiss="androidBanner">×</button>
 </div>
@@ -93,11 +97,46 @@
       <div><strong id="lightboxTitle">Pin</strong><span id="lightboxAuthor"></span></div>
       <div class="lightbox-actions">
         <button class="secondary-btn" id="lightboxShare">Share</button>
-        <a id="lightboxOriginal" class="secondary-btn" target="_blank" rel="noopener noreferrer">Open Original ↗</a>
+        <a id="lightboxOriginal" class="secondary-btn" target="_blank" rel="noopener noreferrer">Open original ↗</a>
       </div>
     </div>
   </div>
 </div>
+</div>
+
+<!-- Install gate: shown on phones until the app is opened as an installed Home Screen app -->
+<div class="install-gate" id="installGate" hidden>
+  <div class="gate-sheet">
+    <img class="gate-icon" src="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png" alt="">
+    <h1>Add Camp Board to your Home Screen to continue</h1>
+    <p class="subtext">This board is built to run like a real app on your phone, so it needs to be installed first. It only takes a moment.</p>
+    <div class="gate-tabs">
+      <button class="gate-tab" id="gateTabIOS" type="button">iPhone / iPad</button>
+      <button class="gate-tab" id="gateTabAndroid" type="button">Android</button>
+    </div>
+    <div class="gate-panel" id="gatePanelIOS">
+      <ol class="gate-steps">
+        <li><span class="num">1</span><span>Open this page in <strong>Safari</strong> (if you tapped this link inside another app, tap ••• or Share at the bottom, then "Open in Safari" first).</span></li>
+        <li><span class="num">2</span><span>Tap the <strong>Share</strong> button (the square with an arrow pointing up), in Safari's toolbar.</span></li>
+        <li><span class="num">3</span><span>Scroll down and tap <strong>Add to Home Screen</strong>.</span></li>
+        <li><span class="num">4</span><span>Tap <strong>Add</strong> in the top right.</span></li>
+        <li><span class="num">5</span><span>Close this browser tab, then open <strong>Camp Board</strong> from the icon that's now on your Home Screen.</span></li>
+      </ol>
+      <p class="gate-note">Already added it? Go to your Home Screen and open the Camp Board icon from there — reloading this browser tab won't switch it over.</p>
+    </div>
+    <div class="gate-panel" id="gatePanelAndroid">
+      <ol class="gate-steps">
+        <li><span class="num">1</span><span>Tap the <strong>⋮</strong> menu in the top right of Chrome.</span></li>
+        <li><span class="num">2</span><span>Tap <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</span></li>
+        <li><span class="num">3</span><span>Tap <strong>Install</strong> to confirm.</span></li>
+        <li><span class="num">4</span><span>Open <strong>Camp Board</strong> from your Home Screen or app drawer.</span></li>
+      </ol>
+      <button class="primary-btn" id="gateInstallNow" hidden>Install now</button>
+      <p class="gate-note">Already added it? Open the Camp Board icon from your Home Screen or app drawer instead of this browser tab.</p>
+    </div>
+  </div>
+</div>
+
 <script async src="https://assets.pinterest.com/js/pinit.js"></script>
 <script src="./app.js" defer></script>
 </body>
