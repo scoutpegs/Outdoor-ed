@@ -1,0 +1,48 @@
+{
+  "name": "Pinboard \u2014 Collaborative Board",
+  "short_name": "Pinboard",
+  "description": "Pinterest-style collaborative board using Google Sheets.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#e60023",
+  "icons": [
+    {
+      "src": "https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png",
+      "sizes": "600x600",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "share_target": {
+    "action": "./share-handler.html",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Create Pin",
+      "short_name": "Create",
+      "url": "./index.html?create=1",
+      "icons": [
+        {
+          "src": "https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png",
+          "sizes": "600x600",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

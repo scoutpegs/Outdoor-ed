@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#e60023"><link rel="stylesheet" href="./styles.css"><title>Adding to Pinboard…</title></head>
+<body><main style="min-height:100vh;display:grid;place-items:center;padding:24px"><section class="composer" style="width:min(560px,100%)"><p class="eyebrow">PINBOARD</p><h1 style="font-size:34px">Adding your share…</h1><p class="subtext">Saving the shared link to your Google Sheets board.</p><p class="hint" id="status">Connecting…</p></section></main>
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbywKJ9E_dCTmjl0PWn-g3DcQKGHhdfPG0AyW_paAlztkfSzLbIVMtIhLuVseFKAYdpc/exec';
+function valid(v){try{const u=new URL(v);return["http:","https:"].includes(u.protocol)?u.href:""}catch{return""}}
+function category(url){try{const u=new URL(url),h=u.hostname.toLowerCase(),p=u.pathname.toLowerCase();if(/youtube|youtu\.be|tiktok/.test(h)||/\.(mp4|webm|ogg|mov)$/.test(p))return"video";if(/pinterest|instagram/.test(h)||/\.(jpg|jpeg|png|gif|webp|avif)$/.test(p))return"photo"}catch{}return"idea"}
+(async()=>{
+ const q=new URLSearchParams(location.search),url=valid(q.get("url")||q.get("text")||"");
+ if(!url){document.querySelector("#status").textContent="No shareable link was found.";setTimeout(()=>location.replace("./index.html"),1800);return}
+ const author=localStorage.getItem("pinboard-author")||"Shared item";const author_id=localStorage.getItem("pinboard-user-id")||crypto.randomUUID();localStorage.setItem("pinboard-user-id",author_id);
+ try{const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({action:"addPin",id:crypto.randomUUID(),created_at:new Date().toISOString(),url,title:q.get("title")||"",author,author_id,category:category(url)})});if(!r.ok)throw new Error("HTTP "+r.status);const t=await r.text();JSON.parse(t);location.replace("./index.html")}
+ catch(e){document.querySelector("#status").textContent="The Apps Script endpoint did not accept this share. Check that its doPost() supports action=addPin.";setTimeout(()=>location.replace("./index.html"),3200)}
+})();
+</script></body></html>

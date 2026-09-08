@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e60023">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pinboard">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" href="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png">
+<link rel="apple-touch-icon" href="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png">
+<link rel="preconnect" href="https://images.squarespace-cdn.com" crossorigin>
+<link rel="stylesheet" href="./styles.css">
+<title>Pinboard</title>
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+  <div class="brand" id="homeButton" role="button" tabindex="0" aria-label="Go home">
+    <img class="brand-img" src="https://images.squarespace-cdn.com/content/v1/67296ef34462bc7a12043dfe/15d2a4db-7072-4f8b-a951-11aa1a6bc718/Outdoor-Education-Service-06.png" alt="" width="40" height="40">
+    <div><strong>Pinboard</strong><span id="syncStatus">Connecting…</span></div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input id="searchInput" type="search" placeholder="Search your board" autocomplete="off">
+    <button id="clearSearch" class="clear-search" aria-label="Clear search" hidden>×</button>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" id="installButton" hidden title="Install">＋</button>
+    <button class="primary-btn" id="addButton">Create</button>
+  </div>
+</header>
+<main class="page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">YOUR COLLABORATIVE BOARD</p>
+      <h1>Ideas worth keeping.</h1>
+      <p class="subtext">Save links, photos and videos in one Pinterest-style board. New pins appear automatically.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="secondary-btn" id="shareBoard">Share Board</button>
+      <div class="sync-pill"><span class="dot"></span><span id="liveText">Live board</span></div>
+    </div>
+  </section>
+  <div class="category-row" role="tablist" aria-label="Categories">
+    <button class="filter active" data-filter="all">All</button>
+    <button class="filter" data-filter="video">Videos</button>
+    <button class="filter" data-filter="photo">Photos</button>
+    <button class="filter" data-filter="idea">Ideas</button>
+  </div>
+  <section class="composer" id="composer" hidden>
+    <form id="pinForm" autocomplete="off">
+      <div class="composer-head">
+        <div><p class="eyebrow">NEW PIN</p><h2>Save something</h2></div>
+        <button type="button" class="close-btn" id="closeComposer" aria-label="Close">×</button>
+      </div>
+      <div class="form-grid">
+        <label><span>Link</span><input id="urlInput" type="url" placeholder="https://…" required></label>
+        <label><span>Title</span><input id="titleInput" maxlength="140" placeholder="What should this pin be called?"></label>
+        <label><span>Your name</span><input id="authorInput" maxlength="40" placeholder="Anonymous"></label>
+        <label><span>Category</span><select id="categoryInput"><option value="idea">Idea</option><option value="photo">Photo</option><option value="video">Video</option></select></label>
+      </div>
+      <div class="composer-foot">
+        <span class="hint">Links are stored in your Google Sheet through your Apps Script endpoint.</span>
+        <button class="primary-btn" type="submit" id="saveButton">Add Pin</button>
+      </div>
+      <p class="error" id="formError" hidden></p>
+    </form>
+  </section>
+  <div id="apiNotice" class="notice"></div>
+  <section class="pin-grid" id="pinGrid" aria-live="polite"></section>
+  <div id="emptyState" class="empty-state" hidden>
+    <div class="empty-icon">✦</div><h2>No pins yet</h2><p>Add your first link to start the board.</p>
+    <button class="primary-btn" id="emptyAdd">Create first pin</button>
+  </div>
+</main>
+<div class="install-sheet" id="iosBanner" hidden>
+  <div><strong>Add Pinboard to your Home Screen</strong><p>Safari → Share → Add to Home Screen. This makes the board feel like a standalone app. iOS does not currently expose Web Share Target receiving for PWAs.</p></div>
+  <button class="close-mini" data-dismiss="iosBanner">×</button>
+</div>
+<div class="install-sheet" id="androidBanner" hidden>
+  <div><strong>Install Pinboard</strong><p>Install the PWA for the best experience. Supported Android browsers can then register Pinboard as a native share target.</p></div>
+  <button class="primary-btn small" id="installNow">Install</button>
+  <button class="close-mini" data-dismiss="androidBanner">×</button>
+</div>
+<div class="modal" id="lightbox" hidden>
+  <div class="modal-backdrop" data-close-lightbox></div>
+  <div class="lightbox-shell" role="dialog" aria-modal="true">
+    <button class="lightbox-close" data-close-lightbox aria-label="Close">×</button>
+    <div class="lightbox-stage" id="lightboxStage"><div id="lightboxContent"></div></div>
+    <div class="lightbox-meta">
+      <div><strong id="lightboxTitle">Pin</strong><span id="lightboxAuthor"></span></div>
+      <div class="lightbox-actions">
+        <button class="secondary-btn" id="lightboxShare">Share</button>
+        <a id="lightboxOriginal" class="secondary-btn" target="_blank" rel="noopener noreferrer">Open Original ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script async src="https://assets.pinterest.com/js/pinit.js"></script>
+<script src="./app.js" defer></script>
+</body>
+</html>
